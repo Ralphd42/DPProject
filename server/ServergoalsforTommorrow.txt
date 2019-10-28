@@ -1,0 +1,14 @@
+1) connect to sql server
+2) install sql Server on linux box
+3) add rest service
+4) build simnple db schema
+5) put together some research
+6) build some powerpoint slides
+
+
+
+links
+https://www.tutorialsteacher.com/nodejs/access-sql-server-in-nodejs
+https://stackoverflow.com/questions/51620225/multiple-servers-on-node-js
+https://stackoverflow.com/questions/2353818/how-do-i-get-started-with-node-js?answertab=oldest#tab-top
+

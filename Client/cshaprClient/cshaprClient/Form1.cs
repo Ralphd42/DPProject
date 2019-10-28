@@ -21,5 +21,10 @@ namespace cshaprClient
         {
             this.textBox1.Text =SocketManager.test();
         }
+
+        private void btnClient_Click(object sender, EventArgs e)
+        {
+            this.textBox1.Text = SocketManager.GetCLients();
+        }
     }
 }

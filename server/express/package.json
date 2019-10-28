@@ -1,0 +1,7 @@
+{
+    "name": "dp-projectserver-package",
+    "version": "1.0.0",
+    "dependencies": {
+        "mssql": "^5.1.0"
+    }
+}
