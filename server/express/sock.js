@@ -1,8 +1,8 @@
 var net = require('net');
-const SQLServer = true;
+const SQLServer = false;
 var mysql = require('mysql');
 var cntr =0;
-console.log("aaaa");
+console.log("Server Started");
 var server = net.createServer(function(socket)
 {
 	socket.on('data', function(data)
@@ -47,15 +47,32 @@ var server = net.createServer(function(socket)
 				}else
 				{
 					// mysql
-
-
-
-
+					//IPAddress
+					const connection = mysql.createConnection
+					(
+						{
+							host: 'localhost',
+							user: 'ralph',
+							password: 'Uszheutp1',
+							database: 'DPProject'
+						}
+					);
+					connection.connect((err) => 
+					{
+						if (err) 
+						{
+							console.log("Failed to connect");
+							throw err;
+						}
+						console.log('Connected!');
+					});
+					connection.query('SELECT * FROM Clients', (err,rows) => {
+						if(err) throw err;
+					  
+						console.log('Data received from Db:\n');
+						console.log(rows);
+					});
 				}
-
-
-
-
 			}
 			else
 			{
@@ -75,3 +92,23 @@ var server = net.createServer(function(socket)
 	});
 });
 server.listen(1337, '127.0.0.1');
+/*
+CREATE TABLE `Clients` (
+  `ClientID` int(11) NOT NULL AUTO_INCREMENT,
+  `IPAddress` varchar(45) DEFAULT NULL,
+  `IsActive` bit(1) DEFAULT NULL,
+  `IsProcessing` bit(1) DEFAULT NULL,
+  `NOTES` text,
+  `ClientName` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`ClientID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+
+sudo mysql-workbench
+
+
+
+
+
+
+
+*/
