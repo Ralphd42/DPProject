@@ -1,20 +1,27 @@
 var net = require('net');
 var cntr =0;
+console.log("aaaa");
 var server = net.createServer(function(socket){
 	//socket.write('Echo server');
-	
+	console.log("cREATED sOCKET");
 	socket.on('data', function(data){
 		if( data.length>0)
 		{
-			var datastring = data.toString('utf8');
-			if( datastring[0]=='L')
+			var datastring = data.toString('utf8').trim();
+			console.log(data);
+			var ds =data.toString().trim();
+			console.log (ds);
+			console.log(datastring.charCodeAt(1) );
+			console.log(ds.charCodeAt(1) );
+			if( datastring[0]=='L'|| datastring[1] =="L" ||datastring =="L" || ds =="L")
 			{
 			 	console.log("L from " +socket.remoteAddress);
 			 	 
 			 	console.log("------------------\n\n");
-				socket.write("Sent an L");
+				socket.write("Sent an L  +socket.remoteAddress");
+				//socket.write("Sent an L2");
 				var clientList ="";
-
+if(false){
 				var config = {
 					user: 'enterprise_rw',
 					password: 'ent_*1RW',
@@ -46,7 +53,13 @@ var server = net.createServer(function(socket){
 
 
 
+			}
+			}
+			else
+			{
 
+				console.log("|"+datastring+"|");
+				console.log("|"+datastring[0]+"|");
 			}
 		}
 		/*console.log("DT-" +data);
