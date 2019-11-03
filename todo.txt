@@ -1,0 +1,8 @@
+todo   schdule
+1) get local sqlserver instance working with Node
+2) match schema with current schema on mysql
+3) build a complete diagram for the architecture
+    details like socket sending letter then datapacket
+4) add PI calc to both client apps
+    first user input
+    next do calc from socket in thread

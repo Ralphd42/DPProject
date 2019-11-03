@@ -1,5 +1,5 @@
 var net = require('net');
-const SQLServer = false;
+const SQLServer = true;
 var mysql = require('mysql');
 var cntr =0;
 console.log("Server Started");
@@ -35,11 +35,12 @@ var server = net.createServer(function(socket)
 							console.log(err);
 						}
 						var request = new sql.Request();
-						request.query('SELECT [City] FROM [dbo].[Buildings]', function (err, recordset) 
+						request.query('SELECT [City] FROM [dbo].[Buildings] where city is not null', function (err, recordset) 
 						{
 							if (err) 
 								console.log(err);
-							socket.write(recordset.toString());
+							//socket.write(recordset.toString());
+							socket.write("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
 							console.log("DoneWrite");
 							console.log(recordset);
 						});
