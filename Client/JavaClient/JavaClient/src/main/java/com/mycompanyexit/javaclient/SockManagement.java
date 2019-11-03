@@ -14,12 +14,35 @@ import java.util.logging.Logger;
  * @author ralph
  */
 public class SockManagement {
-    
+    DataInputStream dis=null;
     
     
     
 public String ProcL()
 {
+    Thread readMessage = new Thread(new Runnable()  
+        { 
+            @Override
+            public void run() { 
+  
+                while (true) { 
+                    try { 
+                        // read the message sent to this client 
+                      //  String msg = dis.readUTF(); 
+                      
+                        System.out.println((char)dis.readByte());
+                        //System.out.println(msg); 
+                        
+                    } catch (IOException e) { 
+                        System.out.println("Error");
+                    } 
+                } 
+            } 
+        }); 
+    
+    
+    
+    
     String retval = "";
     try {
         
@@ -28,11 +51,12 @@ public String ProcL()
          DataOutputStream dos = new DataOutputStream(outS);
          
          dos.writeChar('L');//   .writeUTF("L");
-         InputStream inFromServer = client.getInputStream();
-        // DataInputStream in = new DataInputStream(inFromServer);
-        BufferedReader rd = new BufferedReader(new InputStreamReader(inFromServer)); 
+        // InputStream inFromServer = client.getInputStream();
+        dis = new DataInputStream(client.getInputStream()); 
+        //BufferedReader rd = new BufferedReader(new InputStreamReader(inFromServer)); 
          //retval = in.//in.readUTF();
-        retval =rd.readLine();
+        //retval =rd.readLine();
+        readMessage.start();
         
     } catch (IOException ex) {
         Logger.getLogger(SockManagement.class.getName()).log(Level.SEVERE, null, ex);
