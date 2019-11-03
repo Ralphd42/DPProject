@@ -1,5 +1,5 @@
 var net = require('net');
-const SQLServer = true;
+const SQLServer = false;
 var mysql = require('mysql');
 var cntr =0;
 console.log("Server Started");
@@ -22,7 +22,7 @@ var server = net.createServer(function(socket)
 					var config = 
 					{
 						user: 'enterprise_rw',
-						password: 'ent_*1RW',
+						password: '*1RW',
 						server: 'T1DNDB001.nyserdaweb.ny.gov', 
 						database: 'ENTERPRISE' ,
 						connectionTimeout: 99999
@@ -35,12 +35,11 @@ var server = net.createServer(function(socket)
 							console.log(err);
 						}
 						var request = new sql.Request();
-						request.query('SELECT [City] FROM [dbo].[Buildings] where city is not null', function (err, recordset) 
+						request.query('SELECT [City] FROM [dbo].[Buildings]', function (err, recordset) 
 						{
 							if (err) 
 								console.log(err);
-							//socket.write(recordset.toString());
-							socket.write("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
+							socket.write(recordset.toString());
 							console.log("DoneWrite");
 							console.log(recordset);
 						});
@@ -53,8 +52,8 @@ var server = net.createServer(function(socket)
 					(
 						{
 							host: 'localhost',
-							user: 'ralph',
-							password: 'Uszheutp1',
+							user: 'test',
+							password: 'abc123',
 							database: 'DPProject'
 						}
 					);
@@ -72,6 +71,7 @@ var server = net.createServer(function(socket)
 					  
 						console.log('Data received from Db:\n');
 						console.log(rows);
+						socket.write("Rcevd");
 					});
 				}
 			}
