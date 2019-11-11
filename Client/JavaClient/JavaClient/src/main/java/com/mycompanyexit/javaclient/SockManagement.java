@@ -15,7 +15,10 @@ import java.util.logging.Logger;
  * @author ralph
  */
 public class SockManagement {
-
+    static final  char EOC ='|';
+    
+    private String  ClientID ="";
+    
     DataInputStream dis = null;
 
     public String ProcL() {
@@ -27,8 +30,27 @@ public class SockManagement {
                     try {
                         // read the message sent to this client 
                         //  String msg = dis.readUTF(); 
-
-                        System.out.println((char) dis.readByte());
+                        char input =(char) dis.readByte();
+                        System.out.println(input);
+                        //process input
+                        if(input =='A')
+                        {
+                            System.out.println(" ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ ");
+                            String ClientIDS = "";
+                            input = (char) dis.readByte();
+                            System.out.println(" Z ");
+                            while(input !=EOC)
+                            {
+                                System.out.println(" Z 2");
+                                ClientIDS +=input;
+                                System.out.println(" CLIENT input " +input);
+                                System.out.println(" CLIENT QID " +ClientIDS);
+                                System.out.println(" Z 3");
+                                input = (char) dis.readByte();
+                                System.out.println(" CLIENT IAF " +input);
+                            }
+                            System.out.println(" CLIENT ID " +ClientIDS);
+                        }
 
                     } catch (IOException e) {
                         System.out.println("Error");
@@ -44,7 +66,7 @@ public class SockManagement {
             OutputStream outS = client.getOutputStream();
             DataOutputStream dos = new DataOutputStream(outS);
 
-            dos.writeChar('L');
+            dos.writeChar('N');
             dis = new DataInputStream(client.getInputStream());
             readMessage.start();
 

@@ -1,8 +1,11 @@
 var net = require('net');
 const SQLServer = false;
+const PISIZE =100000;
 var mysql = require('mysql');
 var cntr =0;
 console.log("Server Started");
+var clients=[];
+
 var server = net.createServer(function(socket)
 {
 	socket.on('data', function(data)
@@ -11,7 +14,52 @@ var server = net.createServer(function(socket)
 		{
 			var datastring = data.toString('utf8').trim();
 			var ds =data.toString().trim();
-			if( datastring[0]=='L'|| 
+			 
+			if( datastring[0]=='N'|| 
+				datastring[1]=="N"||
+				datastring   =="N"|| 
+				ds           =="N")
+			{
+				console.log("New Client " + datastring    );
+				console.log(socket.remoteAddress);
+				const connection = mysql.createConnection(
+				{
+					host: 'localhost',
+					user: 'dpuser',
+					password: 'abc123',
+					database: 'DPProject'}
+				);
+				
+				connection.connect((err) => {
+					if (err){
+						console.log("Failed to connect");
+						socket.write("AE Failed to connect|");
+					}
+					console.log('Connected!');
+				});
+				//var insQry =(IPAddress )VALUES ('')";
+				
+				connection.query('INSERT INTO DPProject.Clients Set ?',{IPAddress: socket.remoteAddress  } ,(error, results, fields) => {
+					if(error) {
+						console.log("Failed to Insert");
+						socket.write("AE Failed to ADDCLIENT|");
+					}
+					console.log('Data received from Db:\n');
+					console.log(results.insertId);
+					socket.write("A"+ results.insertId.toString()+"|");
+					socket.ClientID =results.insertId;
+					clients.push(socket);
+				});
+				
+				
+
+
+
+
+
+			}
+
+			else if( datastring[0]=='L'|| 
 				datastring[1]=="L"||
 				datastring   =="L"|| 
 				ds           =="L")
@@ -75,6 +123,70 @@ var server = net.createServer(function(socket)
 					});
 				}
 			}
+			else if( 
+				datastring[0]=="J"|| 
+				datastring[1]=="J"||
+				datastring   =="J"|| 
+				ds           =="J"   )
+			{
+				//add job to database jobs table
+				//jobs
+				/*
+					INSERT INTO DPProject.Jobs
+					(JobType, Running, StartTime, EndTime, ErrorStatus, Finished)
+					VALUES('P', b'0', '', '', '', b'0');
+				*/
+
+				const connection = mysql.createConnection(
+				{
+					host: 'localhost',
+					user: 'dpuser',
+					password: 'abc123',
+					database: 'DPProject'}
+				);
+				connection.connect((err) => {
+					if (err){
+							console.log("Failed to connect For Job Creation");
+							socket.write("JE Failed to Add Job|");
+					}
+						console.log('Connected!');
+				});
+				connection.query('INSERT INTO DPProject.Jobs Set ?',{JobType: 'P'  } ,(error, results, fields) => {
+					if(error) {
+						console.log("Failed to Insert into Job");
+						socket.write("AE Failed to ADDJOB to DB|");
+					}
+					console.log('Data received from Db:\n');
+					console.log(results.insertId);
+					socket.write("B"+ results.insertId.toString() +"|");
+					// get available clients
+					connection.query('Select clientID from DPProject.',(err,rows) => {
+						if(err) throw err;
+					  
+						console.log('Data received from Db:\n');
+						var avail=rows.length;
+						console.log(rows.length);
+						socket.write("Rcevd");
+						
+					
+					
+					
+					
+					});
+				
+				
+				
+				
+				});
+
+
+
+
+
+
+
+			}
+
 			else
 			{
 				console.log("INvalid Entry type");
