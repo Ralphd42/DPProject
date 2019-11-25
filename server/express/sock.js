@@ -4,7 +4,7 @@ const PISIZE =100000;
 var mysql = require('mysql');
 var cntr =0;
 console.log("Server Started");
-var clients=[];
+var clientSockets=[];
 
 var server = net.createServer(function(socket)
 {
@@ -48,7 +48,7 @@ var server = net.createServer(function(socket)
 					console.log(results.insertId);
 					socket.write("A"+ results.insertId.toString()+"|");
 					socket.ClientID =results.insertId;
-					clients.push(socket);
+					clientSockets.push(socket);
 				});
 				
 				
@@ -157,21 +157,60 @@ var server = net.createServer(function(socket)
 						socket.write("AE Failed to ADDJOB to DB|");
 					}
 					console.log('Data received from Db:\n');
+					var JobID = results.insertId;
 					console.log(results.insertId);
 					socket.write("B"+ results.insertId.toString() +"|");
 					// get available clients
-					connection.query('Select clientID from DPProject.',(err,rows) => {
+					connection.query('Select clientID from DPProject.',(err, result, fields) => {
 						if(err) throw err;
 					  
 						console.log('Data received from Db:\n');
-						var avail=rows.length;
-						console.log(rows.length);
+						var avail=result.length;
+						console.log(result.length);
 						socket.write("Rcevd");
-						
-					
-					
-					
-					
+
+						var itmsper =0;
+						var rem = PISIZE%(avail-1);
+
+						itmsper = PISIZE/(avail-1);
+
+
+
+
+						for( var i=0;i<(avail-1);i++)
+						{
+							console.log(fields[i].clientID);
+							var sock = clientSockets.find(sck=>sck.ClientID==fields[i]);
+							// sock send job
+							// add a task
+							/*INSERT INTO DPProject.Tasks (ClientID, JobID, SentTime, CompleteTime, 
+								Errors) VALUES(0, 0, '', '', ''); */
+								connection.query('INSERT INTO DPProject.Tasks Set ?',{ClientID: fields[i].clientID,
+									JobID: JobID,SentTime: new Date()} ,
+								(error, results, fields) => {
+									if(error) {
+										console.log("Failed to Insert into Job");
+										socket.write("AE Failed to ADDJOB to DB|");
+									}
+									var output = "I" + " " + results.insertId + " " +itemsper.toString() +"|";
+									sock.write(output);
+
+								});
+						}
+						var sock = clientSockets.find(sck=>sck.ClientID==fields[i]);
+						connection.query('INSERT INTO DPProject.Tasks Set ?',{ClientID: fields[i].clientID,
+							JobID: JobID,SentTime: new Date()} ,
+						(error, results, fields) => {
+							if(error) {
+								console.log("Failed to Insert into Job");
+								socket.write("AE Failed to ADDJOB to DB|");
+							}
+							var output = "I" + " " + results.insertId + " " +rem.toString() +"|";
+							sock.write(output);
+
+						});
+						// get last
+
 					});
 				
 				
@@ -216,8 +255,8 @@ CREATE TABLE `Clients` (
   PRIMARY KEY (`ClientID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
-sudo mysql-workbench
-
+sudo mysql-workbench  DBBBeaver
+https://www.w3schools.com/nodejs/nodejs_mysql_select.asp
 
 
 

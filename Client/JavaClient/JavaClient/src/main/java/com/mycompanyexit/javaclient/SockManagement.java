@@ -15,12 +15,14 @@ import java.util.logging.Logger;
  * @author ralph
  */
 public class SockManagement {
+    static final char  RPI ='P';
     static final  char EOC ='|';
     
     private String  ClientID ="";
     
     DataInputStream dis = null;
-
+    OutputStream outS =null;
+    DataOutputStream dos =null;
     public String ProcL() {
         Thread readMessage = new Thread(new Runnable() {
             @Override
@@ -51,6 +53,47 @@ public class SockManagement {
                             }
                             System.out.println(" CLIENT ID " +ClientIDS);
                         }
+                        if( input =='I')
+                        {
+                            String TaskID ="";
+                            // get taskID
+                            while (input != ' ')
+                            {
+                                TaskID +=input;
+                                input = (char) dis.readByte();
+                            }
+                            String PILenString ="";
+                            int PILen =0;
+                            while (input != EOC)
+                            {
+                                PILenString +=input;
+                                input = (char) dis.readByte();
+                            }
+                            long calLen = Long.parseLong(PILenString);
+                            int tskID = Integer.parseInt(TaskID);
+                            //convert string to long and send on to 
+                            PICalc piC = new PICalc( 
+                                 tskID,calLen
+                            );
+                            PICalc.PIRet rv =piC.numhits();
+                            // send back to socetHere
+                            /* return taskID numhits         */
+                            try{
+                                /*build output string*/
+                                String tskIDSt = Integer.toString(tskID);
+                                String res = RPI + " " +tskIDSt +" " + 
+                                        Long.toString(rv.Hits) +EOC;
+                                
+                                
+                                
+                                dos.writeBytes(res);
+                            
+                            }
+                            catch(Exception exp){}
+                        
+                        }
+                        
+                        
 
                     } catch (IOException e) {
                         System.out.println("Error");
@@ -63,8 +106,8 @@ public class SockManagement {
         try {
 
             Socket client = new Socket("127.0.0.1", 1337);
-            OutputStream outS = client.getOutputStream();
-            DataOutputStream dos = new DataOutputStream(outS);
+            outS = client.getOutputStream();
+            dos = new DataOutputStream(outS);
 
             dos.writeChar('N');
             dis = new DataInputStream(client.getInputStream());
