@@ -5,6 +5,15 @@ var mysql = require('mysql');
 var cntr =0;
 console.log("Server Started");
 var clientSockets=[];
+//COMMUNICATION CONSTANTS
+// input constants
+const PIReturn ='P';  // result from pi calculation
+//output constants
+
+
+
+
+
 
 var server = net.createServer(function(socket)
 {
@@ -129,14 +138,6 @@ var server = net.createServer(function(socket)
 				datastring   =="J"|| 
 				ds           =="J"   )
 			{
-				//add job to database jobs table
-				//jobs
-				/*
-					INSERT INTO DPProject.Jobs
-					(JobType, Running, StartTime, EndTime, ErrorStatus, Finished)
-					VALUES('P', b'0', '', '', '', b'0');
-				*/
-
 				const connection = mysql.createConnection(
 				{
 					host: 'localhost',
@@ -163,20 +164,13 @@ var server = net.createServer(function(socket)
 					// get available clients
 					connection.query('Select clientID from DPProject.',(err, result, fields) => {
 						if(err) throw err;
-					  
 						console.log('Data received from Db:\n');
 						var avail=result.length;
 						console.log(result.length);
 						socket.write("Rcevd");
-
 						var itmsper =0;
 						var rem = PISIZE%(avail-1);
-
 						itmsper = PISIZE/(avail-1);
-
-
-
-
 						for( var i=0;i<(avail-1);i++)
 						{
 							console.log(fields[i].clientID);
@@ -207,6 +201,7 @@ var server = net.createServer(function(socket)
 							}
 							var output = "I" + " " + results.insertId + " " +rem.toString() +"|";
 							sock.write(output);
+							
 
 						});
 						// get last
@@ -219,6 +214,24 @@ var server = net.createServer(function(socket)
 				});
 
 
+
+
+
+
+
+			}
+			else if( datastring[0]==PIReturn|| 
+			datastring[1]==PIReturn||
+			datastring   ==PIReturn|| 
+			ds           ==PIReturn)
+			{
+				/**
+				 * handle return of PI
+				 */
+				// get data
+				console.log("PIRETURN");
+				console.log(datastring);
+				console.log("++++++++++++++++++++++++++++++++++++PIRETURN");
 
 
 
