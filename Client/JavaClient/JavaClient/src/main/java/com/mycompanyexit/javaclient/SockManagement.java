@@ -15,8 +15,10 @@ import java.util.logging.Logger;
  * @author ralph
  */
 public class SockManagement {
-    static final char  RPI ='P';
-    static final  char EOC ='|';
+    // commands to send
+    static final char  RPI ='P'; //result of PI CALC
+    
+    static final  char EOC ='|'; // END OF LINE 
     
     private String  ClientID ="";
     
@@ -82,14 +84,13 @@ public class SockManagement {
                                 /*build output string*/
                                 String tskIDSt = Integer.toString(tskID);
                                 String res = RPI + " " +tskIDSt +" " + 
-                                        Long.toString(rv.Hits) +EOC;
-                                
-                                
-                                
+                                Long.toString(rv.Hits) +EOC;
                                 dos.writeBytes(res);
                             
                             }
-                            catch(Exception exp){}
+                            catch(IOException exp){
+                                //add exception logging
+                            }
                         
                         }
                         

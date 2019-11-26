@@ -248,10 +248,12 @@ var server = net.createServer(function(socket)
 		}
 	});
 	socket.on('close',(c)=>{
+		console.log(c.ClientID);
 		console.log('CLosed' );
 		console.log(c );
 	});
     socket.on('error',(err)=>{
+		
 		console.log('errored') ;
 		console.log(err);
 	});
@@ -274,6 +276,24 @@ https://www.w3schools.com/nodejs/nodejs_mysql_select.asp
 
 
 
+
+
+*/
+
+
+/*
+	split array into equal parts based on available workers
+	do a single threaded merge sort on each array. in Worker
+	as Items arrive use merge function in Server to join and create the master list
+	Pass M from clientApp to start.  Sent list of numbers as comma separated list through socket. Or rest service
+
+	Merge sort in Node
+
+	https://www.geeksforgeeks.org/merge-sort/
+
+	https://medium.com/hackernoon/programming-with-js-merge-sort-deb677b777c0
+
+	
 
 
 */
