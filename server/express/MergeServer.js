@@ -32,13 +32,10 @@ var server = net.createServer(function(socket)
     console.log("Server");
     socket.on('data', function(data)
 	{
-         
         if( data.length>0)
 		{
-             
             if( data.length>0)
 		    {
-                 
                 var datastring = data.toString('utf8').trim();
 			    var ds =data.toString().trim();
                 console.log("Rcvd call from client");
@@ -52,26 +49,7 @@ var server = net.createServer(function(socket)
 			    	datastring   == inJoin || 
 				    ds           == inJoin)
 			    {
-                    console.log("New Client " + datastring    );
-				    console.log(socket.remoteAddress);
-				    const connection = mysql.createConnection(dbConn);
-                    connection.connect((err) => {
-                        if (err)
-                        {
-                            console.log("Failed to connect");
-                            socket.write("AE Failed to connect|");
-                            socket.destroy();
-                        }else
-                        {
-
-                            console.log('Connected! to DB');
-                            console.log(datastring[0]);
-                            console.log(datastring[1]);
-                            // add client
-
-                            //socket.write("M+12342+123,45,37,2,5,221|");
-                        }
-                    });
+                    AddNewClient(socket);
                 }else if (
                     datastring[0]== Sorted || 
                     datastring[1]== Sorted ||
@@ -90,6 +68,7 @@ var server = net.createServer(function(socket)
                         parseout.SortedData =SortedData;
                     
                     */
+
                     console.log("----Parsed-Sort-------------");
                     console.log(parsObject.TaskID);
                     console.log(parsObject.SortedData);
@@ -99,31 +78,17 @@ var server = net.createServer(function(socket)
                     3) merge
                      */
                       
+                      
 
                 }else if(
                     datastring[0]== newSort || 
                     datastring[1]== newSort ||
                     datastring   == newSort || 
-                    ds           == newSort
-                    )
+                    ds           == newSort    )
                 {
-
                     var ArrayText = datastring.substring(2,datastring.length-2);
-                    // arrayText = the array - all extras
                     console.log( ArrayText);
-                    //add to database
-                    //split up and send to clients
-                        // build tasks
-                        // loop connections
-                    //?? acknowledge
-                    /* Add Job to Database */
                     addMergeSortJob(ArrayText, socket );
-
-
-
-
-
-
                 }
             }
         }
@@ -132,6 +97,7 @@ var server = net.createServer(function(socket)
 
 function addMergeSortJob(  MSData, CmdConSocket)
 {
+    console.log("addMergeSortJob");
     const connection = mysql.createConnection(dbConn);
     connection.connect((err) => 
     {
@@ -196,8 +162,13 @@ function addMergeSortJob(  MSData, CmdConSocket)
     
 }
 
+/***
+ * Handles adding new client to system 
+ sNewClientSock new client id
+ */
 function AddNewClient( sNewClientSock)
 {
+    console.log("ANC");
     const connection = mysql.createConnection(dbConn);
     connection.connect(
     (err) => 
@@ -219,7 +190,9 @@ function AddNewClient( sNewClientSock)
                     socket.write("AE Failed to ADDCLIENT|");
                     socket.destroy();
                 }
-                sNewClientSock.write("A"+ results.insertId.toString()+"|");
+                //sNewClientSock.write("A"+ results.insertId.toString()+"|");
+                sNewClientSock.write("M"+ results.insertId.toString()+"+23,5,72,12,8,1,45,33|");
+                
                 sNewClientSock.ClientID =results.insertId;
                 clientSockets.push(sNewClientSock);
             });
@@ -228,6 +201,56 @@ function AddNewClient( sNewClientSock)
 }
 
 
+
+
+
+
+/**
+ * saveTaskData
+ * Saves sorted data for a task to database
+ * 
+ * @param {*} csock  client socket sending the data
+ * @param {*} TaskID the task ID of the this task
+ * @param {*} SortedData the data in a comm separated string array
+ */
+function saveTaskData( csock, TaskID, SortedData )
+{
+    // write data to tasks 
+    const connection = mysql.createConnection(dbConn);
+    connection.connect(
+    (err) => 
+    {
+        if (err)
+        {
+            console.log("Failed to connect");
+            socket.write("AE Failed to connect|");
+            socket.destroy();
+        }else
+        {
+            connection.query('Update  INTO DPProject.Tasks Set ?',
+            {IPAddress: sNewClientSock.remoteAddress  } ,
+            (error, results, fields) => 
+            {
+                if(error) 
+                {
+                    console.log("Failed to Insert");
+                    socket.write("AE Failed to ADDCLIENT|");
+                    socket.destroy();
+                }
+                sNewClientSock.write("A"+ results.insertId.toString()+"|");
+                sNewClientSock.ClientID =results.insertId;
+                //clientSockets.push(sNewClientSock);
+            });
+        }
+    });
+}
+
+
+/**
+ * 
+ * @param {*} inputData       
+ * @param {*} parseout     
+ */
 function parseInputSort( inputData, parseout)
 {
     var startTID = inputData.indexOf(Sorted   );
@@ -238,4 +261,26 @@ function parseInputSort( inputData, parseout)
     parseout.TaskID =ID;
     parseout.SortedData =SortedData;
 }
-server.listen(9911);
+server.listen(9911, );
+//"192.168.1.17"
+function merge( arr1, arr2)
+{
+
+
+
+
+
+}
+
+
+/*
+FileReader fr = 
+      new FileReader("C:\\Users\\pankaj\\Desktop\\test.txt"); 
+  
+    int i; 
+    while ((i=fr.read()) != -1) 
+      System.out.print((char) i); 
+*/
+
+
+
