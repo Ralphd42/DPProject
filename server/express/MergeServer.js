@@ -12,12 +12,15 @@ var CommTerm  = '|';
 var CommSplit = '+';
 
 // input codes  -- codes received from a client
-var inJoin = 'N';  //  
-var Sorted = 'S';  // sorted String
+var inJoin   = 'N';  // new client  
+var Sorted   = 'S';  // sorted String
+var PIRETCNT = 'Q';
 
 // output to client 
 var cMergeJob ='M'; // send merge request to client MTasKID+commaseparatedData|
+var CPIJob    ='P';
 var ACKNS     ='A';  // acks new slave with a client ID
+
 
 //input codes from management console(MC)
 var newSort ='M';  // new array to Merge Sort
@@ -114,7 +117,13 @@ function AddPiJob( PiCount, CmdConSocket)
     {
         jobID:0,
         jobcount:PiCount,
-        socks:[]
+        socks:[],
+        slicecount:0, 
+        TasksUsed:0,    
+        TasksRunning:0,
+        numProc:0,
+        hits:0
+
     }; // use PiJob.socks.pus
     
 
@@ -126,7 +135,8 @@ function AddPiJob( PiCount, CmdConSocket)
             CmdConSocket.write("E Failed to Add Job|");
             CmdConSocket.destroy();
             return;
-        }else{
+        }else
+        {
             connection.query('INSERT INTO DPProject.Jobs Set ?',
                 {JobType: 'P' ,PiCount:  PiCount } ,
                 (error, results, fields) => 
@@ -151,19 +161,52 @@ function AddPiJob( PiCount, CmdConSocket)
                         {
                             jobPiCount += extra;
                         }
+                    
+                        connection.query('INSERT INTO DPProject.Tasks Set ?',{
+                            ClientID: 0 ,
+                            JobID:JobID,
+                            TaskData:  jobdataString },
+                            (error, results, fields) => 
+                            {
+                                if(error  && REQDB) 
+                                {
+                                    console.log("Failed to Insert into Job");
+                                    if(REQDB)
+                                    {
+                                        CmdConSocket.write("E Failed to Task to DB|");
+                                    }
+                                }else
+                                {
+                                    var TaskID="";
+                                    if(!error)
+                                    {
+                                        TaskID = results.insertId;
+                                    }
+                                    var sortmsg =piJob + TaskID.toString();
+                                    sortmsg +=CommSplit;
+                                    sortmsg +=jobPiCount.toString();
+                                    sortmsg += CommTerm;
+                                    piJob.socks.push(clientSockets[i]);
+                                    clientSockets[i].WORKING =true;
+                                    clientSockets[i].BUSY=true;
+                                    clientSockets[i].write(sortmsg);
+                                    clientSockets[i].TASKID = TaskID.toString();
+                                    piJob.TasksUsed++;    
+                                    piJob.TasksRunning++; 
+                                    clientSockets[i].pJob =piJob;
+                                }
+                            });
                     }
-
-                    //freeClients
-                
                 }
-            }
-
+            });
+            
         }
 
 
 
 
 
+});
 }
 
 
@@ -305,7 +348,7 @@ function AddNewClient( sNewClientSock)
     });
 }
 /**
- * saveTaskData
+ * saveTaskData  --  should Be merge task
  * Saves sorted data for a task to database
  * This writes and manages a task after merge is returned
  * 
@@ -378,6 +421,78 @@ function saveTaskData( csock, TaskID, SortedData )
     });
 }
 
+/**
+ * savePITaskData  --   
+ * Saves PI data
+ * This writes and manages a task and job after pi
+ * 
+ * @param {*} csock  client socket sending the data
+ * @param {*} TaskID the task ID of the this task
+ * @param {*} Hits the number of hits returned
+ */
+function savePITaskData( csock, TaskID, Hits )
+{
+    csock.pJob.TasksRunning--;
+    csock.pJob.hits+=Hits;
+    csock.BUSY=false;
+    // check for done
+    if( csock.pJob<=0)
+    {
+        ReturnPIJob(csock.pJob);
+    }
+    const connection = mysql.createConnection(dbConn);
+    connection.connect(
+    (err) => 
+    {
+        if (err)
+        {
+            console.log("Failed to connect TO DB");
+            console.log(err);
+            if(REQDB)
+            {
+                socket.write("AE Failed to connect|");
+                socket.destroy();
+                return;
+            }
+        }
+        else
+        {
+            connection.query(
+                'Update DPProj.Tasks set Hits=? CompleteTime=now() where TaskID=?',
+            [   newData,   TaskID       ] ,
+            (error, results, fields) => 
+            {
+                if(error) 
+                {
+                    console.log("Failed to UPDATE A PI TASK");
+                    if(REQDB)
+                    {
+                        socket.write("E FAILED TO UPDATE A TASK|");
+                        socket.destroy();
+                        return;
+                    }
+                }
+            });
+        }
+        
+
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * 
@@ -417,7 +532,7 @@ function merge( arr1, arr2)
 /**
  * Send Merge job back to Client
  */
-function ReturnMergeSortJob()
+function ReturnMergeSortJob(lsttskData)
 {
     console.log("ReturnSortJob");
     // send data back to client first
@@ -506,6 +621,177 @@ function ReturnMergeSortJob()
     });
     
 }
+
+function ReturnMergeSortJob_NA()
+{
+    console.log("ReturnSortJob");
+    // send data back to client first
+    var output = sortmsg.join(",");
+    ConsoleSocket.Write(DoneMerge);
+    ConsoleSocket.write(sortmsg);
+    ConsoleSocket.write(CommTerm);
+    const connection = mysql.createConnection(dbConn);
+    connection.connect((err) => 
+    {
+        if (err)
+        {
+            console.log("Failed to connect For Job Creation");
+            CmdConSocket.write("E Failed to Add Job|");
+            CmdConSocket.destroy();
+        }else
+        {
+            connection.query('INSERT INTO DPProject.Jobs Set ?',
+                {JobType: 'M' ,MergeData:  MSData } ,
+                (error, results, fields) => 
+            {
+                if(error) 
+                {
+                    console.log("Failed to Insert into Job");
+                    CmdConSocket.write("AE Failed to ADDJOB to DB|");
+                }else
+                {
+                    MergeJobData.UnSorted = MSData;
+                    MergeJobData.Running  = true;
+                    MergeJobData.Sorted   =[];
+                    MergeJobData.TasksUsed=0;    
+                    MergeJobData.TasksRunning=0;
+                    
+                    console.log('Created  Merge job in DB:\n');
+                    var JobID = results.insertId;
+                    var jobDataArray = MSData.split(',').map(Number);
+                    var lendata =jobDataArray.length;
+                    var numclients =clientSockets.length;
+                    var slicelen = lendata/ (numclients);
+                    var extra = lendata%numclients;
+                        // create tasks
+                    for( i=0;i< numclients ;i++)
+                    {
+                        jobdata = jobDataArray.slice(i*slicelen,  (i+1)*slicelen  );
+                        if(     i==(numclients-1))
+                        {
+                            jobdata = jobDataArray.slice(i*slicelen,  (i+1)*slicelen  +extra   );
+                        }
+                        var jobdataString = jobdata.join(",");
+                        connection.query('INSERT INTO DPProject.Tasks Set ?',{
+                            ClientID: 0 ,
+                            JobID:JobID,
+                            TaskData:  jobdataString },
+                            (error, results, fields) => 
+                            {
+                                if(error) {
+                                    console.log("Failed to Insert into Job");
+                                    CmdConSocket.write("E Failed to Task to DB|");
+                                }else
+                                {
+                                    var TaskID = results.insertId;
+                                    var sortmsg =cMergeJob + TaskID.toString();
+                                    sortmsg +=CommSplit;
+                                    sortmsg += jobdataString;
+                                    sortmsg += CommTerm;
+                                    clientSockets[i].write(sortmsg);
+                                    MergeJobData.TasksUsed++;    
+                                    MergeJobData.TasksRunning++; 
+                                }
+                            }
+                        );
+                    }
+                }
+            });
+        }
+    });
+}
+
+function ReturnPiJob( PiInfo)
+{
+    console.log("ReturnPIJob");
+    // send data back to client first
+    var szJob   = PiInfo.jobcount;
+    var numHits = PiInfo.hits;
+
+    var pi = numHits/szJob   * 4.00000;
+
+
+    ConsoleSocket.Write(DoneMerge);
+    ConsoleSocket.write(pi.toString());
+    ConsoleSocket.write(CommTerm);
+    const connection = mysql.createConnection(dbConn);
+    connection.connect((err) => 
+    {
+        if (err)
+        {
+            console.log("Failed to connect For Job Creation");
+            CmdConSocket.write("E Failed to Add Job|");
+            CmdConSocket.destroy();
+        }else
+        {
+            connection.query('INSERT INTO DPProject.Jobs Set ?',
+                {JobType: 'M' ,MergeData:  MSData } ,
+                (error, results, fields) => 
+            {
+                if(error) 
+                {
+                    console.log("Failed to Insert into Job");
+                    CmdConSocket.write("AE Failed to ADDJOB to DB|");
+                }else
+                {
+                    MergeJobData.UnSorted = MSData;
+                    MergeJobData.Running  = true;
+                    MergeJobData.Sorted   =[];
+                    MergeJobData.TasksUsed=0;    
+                    MergeJobData.TasksRunning=0;
+                    
+                    console.log('Created  Merge job in DB:\n');
+                    var JobID = results.insertId;
+                    var jobDataArray = MSData.split(',').map(Number);
+                    var lendata =jobDataArray.length;
+                    var numclients =clientSockets.length;
+                    var slicelen = lendata/ (numclients);
+                    var extra = lendata%numclients;
+                        // create tasks
+                    for( i=0;i< numclients ;i++)
+                    {
+                        jobdata = jobDataArray.slice(i*slicelen,  (i+1)*slicelen  );
+                        if(     i==(numclients-1))
+                        {
+                            jobdata = jobDataArray.slice(i*slicelen,  (i+1)*slicelen  +extra   );
+                        }
+                        var jobdataString = jobdata.join(",");
+                        connection.query('INSERT INTO DPProject.Tasks Set ?',{
+                            ClientID: 0 ,
+                            JobID:JobID,
+                            TaskData:  jobdataString },
+                            (error, results, fields) => 
+                            {
+                                if(error) {
+                                    console.log("Failed to Insert into Job");
+                                    CmdConSocket.write("E Failed to Task to DB|");
+                                }else
+                                {
+                                    var TaskID = results.insertId;
+                                    var sortmsg =cMergeJob + TaskID.toString();
+                                    sortmsg +=CommSplit;
+                                    sortmsg += jobdataString;
+                                    sortmsg += CommTerm;
+                                    clientSockets[i].write(sortmsg);
+                                    MergeJobData.TasksUsed++;    
+                                    MergeJobData.TasksRunning++; 
+                                }
+                            }
+                        );
+                    }
+                }
+            });
+        }
+    });
+}
+
+
+
+
+
+
+
+
 
 
 freeClientCount()

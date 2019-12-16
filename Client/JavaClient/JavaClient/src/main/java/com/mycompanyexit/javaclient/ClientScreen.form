@@ -23,11 +23,14 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="0" attributes="0">
-              <Component id="jButton1" min="-2" pref="84" max="-2" attributes="0"/>
-              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+          <Component id="jButton1" min="-2" pref="84" max="-2" attributes="0"/>
+          <Group type="102" attributes="0">
+              <Component id="btnSendFile" min="-2" pref="152" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="97" max="-2" attributes="0"/>
+              <Component id="btnPiJob" min="-2" pref="236" max="-2" attributes="0"/>
           </Group>
-          <Component id="jScrollPane1" alignment="1" pref="400" max="32767" attributes="0"/>
+          <Component id="jScrollPane1" alignment="0" min="-2" pref="614" max="-2" attributes="0"/>
+          <Component id="JbtnAvailable" alignment="0" min="-2" max="-2" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -35,8 +38,15 @@
           <Group type="102" alignment="0" attributes="0">
               <Component id="jButton1" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="jScrollPane1" pref="240" max="32767" attributes="0"/>
+              <Component id="JbtnAvailable" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="95" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                  <Component id="btnPiJob" pref="54" max="32767" attributes="0"/>
+                  <Component id="btnSendFile" max="32767" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
+              <Component id="jScrollPane1" min="-2" pref="473" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -65,5 +75,23 @@
         </Component>
       </SubComponents>
     </Container>
+    <Component class="javax.swing.JButton" name="btnSendFile">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Send File to Server "/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSendFileActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="JbtnAvailable">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Available"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnPiJob">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="SendPiJob"/>
+      </Properties>
+    </Component>
   </SubComponents>
 </Form>

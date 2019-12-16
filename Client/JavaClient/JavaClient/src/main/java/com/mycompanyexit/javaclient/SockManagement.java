@@ -119,5 +119,54 @@ public class SockManagement {
         }
         return retval;
     }
+    
+    
+    
+    
+    private Socket client;
+    
+    private PrintWriter pw ;
 
+    private InputStream is;
+    private InputStreamReader ISReader;// = new InputStreamReader(input);
+    BufferedReader Breader;
+    
+    
+    
+    
+    
+    
+    public void SendFileToServer( String filename, String IP, Integer port)
+    {
+        try
+        {
+            PrintWriter pwMgmt ;
+            Socket MgmSock = new Socket(IP,port );
+            OutputStream mgmOs = MgmSock.getOutputStream();
+            pwMgmt = new PrintWriter(mgmOs, false);
+            pwMgmt.print('M');
+            try
+            {
+                FileReader fr =  new FileReader(filename); 
+                int i;
+                while ((i=fr.read()) != -1)
+                {
+                    char iChar =(char)i;
+                    // if comma or number sendq
+                    System.out.println(iChar);
+                    pwMgmt.print(iChar);
+                    
+                }
+                pwMgmt.flush();
+                
+            }catch(IOException exp)
+            {
+                exp.toString();
+            }
+        }catch(IOException ex)
+        {
+            Logger.getLogger(SockManagement.class.getName()).log(Level.SEVERE, null, ex);
+        
+        }
+    }
 }
