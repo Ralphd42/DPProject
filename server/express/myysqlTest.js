@@ -1,10 +1,13 @@
 var mysql = require('mysql');
 
-const dbConn =Object.freeze({
+const dbConn =Object.freeze(
+    {
     host: 'ralphmysql.cqnc6tzk60xy.us-east-1.rds.amazonaws.com',
     user: 'admin',
     password: 'abcd1234',
-    database: 'DPPROJ'});
+    database: 'DPPROJ'
+
+});
     AddNewClient();
     function AddNewClient(  )
     {
