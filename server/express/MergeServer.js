@@ -15,6 +15,8 @@ var CommSplit = '+';
 var inJoin   = 'N';  // new client  
 var Sorted   = 'S';  // sorted String
 var PIRETCNT = 'Q';
+var BUSY = 'B';
+var AVAIL ='A';
 
 // output to client 
 var cMergeJob ='M'; // send merge request to client MTasKID+commaseparatedData|
@@ -40,11 +42,28 @@ const dbConn =Object.freeze(
 });
  
  
+KillJOBS(soc)
+{
+    if(soc===ConsoleSocket)
+    {
 
+
+    }else if( soc.WORKING)
+    {
+        Console.write("*Job Failed");
+    }
+}
 
 
 var server = net.createServer(function(socket)
 {
+    socket.on('error', function(err) {
+        console.log(err);
+
+        console.log('Socket error!');
+        KillJOBS(socket);
+
+    });
     var MergeJobData ={};
     console.log("Server");
     socket.on('data', function(data)
@@ -65,9 +84,19 @@ var server = net.createServer(function(socket)
 				    datastring[1]== inJoin ||
 			    	datastring   == inJoin || 
 				    ds           == inJoin)
-			    {
+			    {   
+                    socket.socType="SLAVE";
                     AddNewClient(socket);
-                }else if (
+                }else if( 
+                    datastring[0]== BUSY || 
+				    datastring[1]== BUSY ||
+			    	datastring   == BUSY || 
+				    ds           == BUSY)
+			    {   
+                     
+                    socket.BUSY=true;
+                
+                } else if (
                     datastring[0]== Sorted || 
                     datastring[1]== Sorted ||
                     datastring   == Sorted || 
@@ -324,8 +353,12 @@ function addMergeSortJob(  MSData, CmdConSocket)
                     var slicelen = lendata/ (numclients);
                     var extra = lendata%numclients;
                         // create tasks
+                    console.log("NUMMS clients");
+                    console.log( numclients);
+
                     for( i=0;i< numclients ;i++)
                     {
+                        console.log("i =" +i);
                         jobdata = jobDataArray.slice(i*slicelen,  (i+1)*slicelen  );
                         if(     i==(numclients-1))
                         {
