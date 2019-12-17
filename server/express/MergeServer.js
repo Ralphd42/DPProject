@@ -498,7 +498,7 @@ function saveTaskData( csock, TaskID, SortedData )
     }
     else
     {
-        csock.mrgjbdt.Sorted =merge( newData,MergeJobData.Sorted );
+        csock.mrgjbdt.Sorted =merge( newData,csock.mrgjbdt.Sorted );
     }
     
     // mark this task done
