@@ -71,7 +71,7 @@ var server = net.createServer(function(socket)
         try {
             console.log("Ending");
             console.log("Ended a socket");
-            if(soc!==ConsoleSocket)
+            if(socket!==ConsoleSocket)
             {
                 clientSockets.splice(clients.indexOf(socket), 1);
                 ConsoleSocket.write("*Job Failed");
