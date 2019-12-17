@@ -647,7 +647,7 @@ server.listen(9977);
 //"192.168.1.17"
 function merge( left, right)
 {
-    var res =[];
+    var resultArray =[];
     var leftIndex = 0, rightIndex = 0;
     var resultArray;
   
