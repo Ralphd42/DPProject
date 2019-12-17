@@ -73,7 +73,7 @@ var server = net.createServer(function(socket)
             console.log("Ended a socket");
             if(socket!==ConsoleSocket)
             {
-                clientSockets.splice(clients.indexOf(socket), 1);
+                clientSockets.splice(clientSockets.indexOf(socket), 1);
                 ConsoleSocket.write("*Job Failed");
             }
         } catch (err) {
