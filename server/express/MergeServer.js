@@ -44,9 +44,10 @@ const dbConn =Object.freeze(
  
 function KillJOBS(soc)
 {
+    console.log("Called Kill");
     if(soc===ConsoleSocket)
     {
-
+        
 
     }else if( soc.WORKING)
     {
@@ -68,10 +69,15 @@ var server = net.createServer(function(socket)
     });
     socket.on('end', function () {
         try {
-
+            console.log("Ending");
             console.log("Ended a socket");
-            clientSockets.splice(clients.indexOf(socket), 1);
+            if(soc!==ConsoleSocket)
+            {
+                clientSockets.splice(clients.indexOf(socket), 1);
+                ConsoleSocket.write("*Job Failed");
+            }
         } catch (err) {
+            console.log(err);
             console.log("Failed to remove Socket");
             // to do remove from DB
         }
