@@ -42,7 +42,7 @@ const dbConn =Object.freeze(
 });
  
  
-KillJOBS(soc)
+function KillJOBS(soc)
 {
     if(soc===ConsoleSocket)
     {
@@ -51,6 +51,7 @@ KillJOBS(soc)
     }else if( soc.WORKING)
     {
         Console.write("*Job Failed");
+        ConsoleSocket.write("*Job Failed");
     }
 }
 
