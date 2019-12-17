@@ -50,8 +50,9 @@ function KillJOBS(soc)
 
     }else if( soc.WORKING)
     {
-        Console.write("*Job Failed");
+        console.write("*Job Failed");
         ConsoleSocket.write("*Job Failed");
+        console.write (err);
     }
 }
 
@@ -61,10 +62,24 @@ var server = net.createServer(function(socket)
     socket.on('error', function(err) {
         console.log(err);
 
-        console.log('Socket error!');
+        console.log('Socket error!', err);
         KillJOBS(socket);
 
     });
+    socket.on('end', function () {
+        try {
+
+            console.log("Ended a socket");
+            clientSockets.splice(clients.indexOf(socket), 1);
+        } catch (err) {
+            console.log("Failed to remove Socket");
+            // to do remove from DB
+        }
+    });
+
+
+
+
     var MergeJobData ={};
     console.log("Server");
     socket.on('data', function(data)
