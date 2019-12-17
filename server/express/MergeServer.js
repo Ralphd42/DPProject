@@ -509,7 +509,7 @@ function saveTaskData( csock, TaskID, SortedData )
     {
         ReturnMergeSortJob(csock.mrgjbdt.Sorted,csock);
     }
-
+    csock.WORKING=false;
 
     // write data to tasks 
     
@@ -645,19 +645,19 @@ function parseInputSort( inputData, parseout)
 }
 server.listen(9977);
 //"192.168.1.17"
-function merge( arr1, arr2)
+function merge( left, right)
 {
     var res =[];
     var leftIndex = 0, rightIndex = 0;
     var resultArray;
-  // We will concatenate values into the resultArray in order
+  
   while (leftIndex < left.length && rightIndex < right.length) {
     if (left[leftIndex] < right[rightIndex]) {
       resultArray.push(left[leftIndex]);
-      leftIndex++; // move left array cursor
+      leftIndex++;  
     } else {
       resultArray.push(right[rightIndex]);
-      rightIndex++; // move right array cursor
+      rightIndex++;  
     }
   }
   return resultArray;}
