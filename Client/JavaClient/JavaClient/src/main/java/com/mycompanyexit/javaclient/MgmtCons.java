@@ -5,8 +5,7 @@
  */
 package com.mycompanyexit.javaclient;
 
-import static com.mycompanyexit.javaclient.SockManagement.EOC;
-import static com.mycompanyexit.javaclient.SockManagement.RPI;
+ 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -43,7 +42,7 @@ public class MgmtCons {
                             String ClientIDS = "";
                             input = (char) dis.readByte();
                             System.out.println(" Z ");
-                            while(input !=EOC)
+                            while(input !=' ')
                             {
                                 System.out.println(" Z 2");
                                 ClientIDS +=input;
@@ -66,7 +65,7 @@ public class MgmtCons {
                             }
                             String PILenString ="";
                             int PILen =0;
-                            while (input != EOC)
+                            while (input != 'z')
                             {
                                 PILenString +=input;
                                 input = (char) dis.readByte();
@@ -83,8 +82,8 @@ public class MgmtCons {
                             try{
                                 /*build output string*/
                                 String tskIDSt = Integer.toString(tskID);
-                                String res = RPI + " " +tskIDSt +" " + 
-                                Long.toString(rv.Hits) +EOC;
+                                String res = "" + " " +tskIDSt +" " + 
+                                Long.toString(rv.Hits) +"";
                                 dos.writeBytes(res);
                             
                             }

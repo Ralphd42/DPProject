@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cndln;
+ 
 
 import java.net.*;
 import java.io.*;
@@ -15,6 +15,9 @@ import java.util.logging.Logger;
  * @author ralph
  */
 public class SockManagement {
+
+    final String IP ="localhost";
+    final int port =9977;
     //cimmunicationcharacters
     final char CommTerm  = '|';
     final char CommSplit = '+';
@@ -35,7 +38,8 @@ public class SockManagement {
     {
         Running=false;
         try{
-            dos.writeBytes(BUSY+CommTerm);
+            String msg = Character.toString(BUSY) +  Character.toString(CommTerm);
+            dos.writeBytes(msg);
         }
         catch(IOException exp){
             //add exception logging
@@ -52,7 +56,7 @@ public class SockManagement {
             @Override
             public void run() {
 
-                while (true) {
+                while (true && Running) {
                     try {
                         char input =(char) dis.readByte();
                         System.out.println(input);
@@ -62,8 +66,10 @@ public class SockManagement {
                             System.out.println("PI CALC");
                             String TaskID ="";
                             // get taskID
+                            input = (char) dis.readByte();
                             while (input != CommSplit)
                             {
+                                
                                 TaskID +=input;
                                 input = (char) dis.readByte();
                             }
@@ -88,16 +94,16 @@ public class SockManagement {
                             PICalc.PIRet rv =piC.numhits();
                             // send back to socetHere
                             /* return taskID numhits         */
-                            try{
+                            
                                 /*build output string*/
-                                String tskIDSt = Integer.toString(tskID);
-                                String res = PIRETCNT  +tskIDSt +CommSplit + 
-                                Long.toString(rv.Hits) +CommTerm;
-                                dos.writeBytes(res);
-                            }
-                            catch(IOException exp){
-                                //add exception logging
-                            }
+                            String tskIDSt = Integer.toString(tskID);
+                            String res = PIRETCNT  +tskIDSt +CommSplit + 
+                            Long.toString(rv.Hits) +CommTerm;
+                                 
+                            PrintWriter pwMgmt ;
+                            pwMgmt = new PrintWriter(outS, false);
+                            pwMgmt.print(res);
+                            pwMgmt.flush();
                         }
                         if( input==cMergeJob)
                         {
@@ -110,6 +116,8 @@ public class SockManagement {
 
                     } catch (IOException e) {
                         System.out.println("Error");
+                        System.out.println(e);
+                        Running=false;
                     }
                 }
             }
@@ -118,12 +126,14 @@ public class SockManagement {
         String retval = "";
         try {
 
-            client = new Socket("127.0.0.1", 1337);
+            client = new Socket(IP, port);
             outS = client.getOutputStream();
             dos = new DataOutputStream(outS);
 
-            dos.writeChar('N');
+            dos.writeChar(inJoin);
+            dos.writeChar(CommTerm);
             dis = new DataInputStream(client.getInputStream());
+            Running =true;
             readMessage.start();
 
         } catch (IOException ex) {
@@ -145,7 +155,7 @@ public class SockManagement {
     
     
     
-    
+    ///--------------------------------------------------------------------------------------
     
     
     public void SendFileToServer( String filename, String IP, Integer port)

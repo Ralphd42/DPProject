@@ -15,17 +15,36 @@ import java.util.logging.Logger;
  * @author ralph
  */
 public class SockManagement {
+    public final String IP="localhost";
+    public final int PORT=9977;
+    public SockManagement()
+    {
+        running =false;
+    
+    }
     // commands to send
-    static final char  RPI ='P'; //result of PI CALC
+    final char CommTerm  = '|';
+    final char CommSplit = '+';
+
+    ///console msgs
     
-    static final  char EOC ='|'; // END OF LINE 
+    //input codes from management console(MC)
+    final char newSort ='M';  // new array to Merge Sort
+    final char PI='P';
+
+    //output codes to (MC)
+    final char  DoneMerge ='D';
+    final char  DonePi    ='E';
+    final char  BUSY      ='B';
+    final char  FAILED    ='F';
+    boolean running =false;
     
-    private String  ClientID ="";
     
+    //socket classes
     DataInputStream dis = null;
     OutputStream outS =null;
     DataOutputStream dos =null;
-    public String ProcL() {
+    public String StartProc( boolean MS  , String filename  , String PiNum   ) {
         Thread readMessage = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -35,64 +54,48 @@ public class SockManagement {
                         // read the message sent to this client 
                         //  String msg = dis.readUTF(); 
                         char input =(char) dis.readByte();
-                        System.out.println(input);
+                         
                         //process input
-                        if(input =='A')
+                        if(input ==DoneMerge)
                         {
-                            System.out.println(" ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ ");
-                            String ClientIDS = "";
                             input = (char) dis.readByte();
-                            System.out.println(" Z ");
-                            while(input !=EOC)
+                            while(input !=CommTerm)
                             {
-                                System.out.println(" Z 2");
-                                ClientIDS +=input;
-                                System.out.println(" CLIENT input " +input);
-                                System.out.println(" CLIENT QID " +ClientIDS);
-                                System.out.println(" Z 3");
-                                input = (char) dis.readByte();
-                                System.out.println(" CLIENT IAF " +input);
+                                System.out.print(input);
                             }
-                            System.out.println(" CLIENT ID " +ClientIDS);
                         }
-                        if( input =='I')
+                        if( input ==DonePi)
                         {
-                            String TaskID ="";
-                            // get taskID
-                            while (input != ' ')
+                            input = (char) dis.readByte();
+                            System.out.print("PI Estimate");
+                            while(input !=CommTerm)
                             {
-                                TaskID +=input;
-                                input = (char) dis.readByte();
-                            }
-                            String PILenString ="";
-                            int PILen =0;
-                            while (input != EOC)
-                            {
-                                PILenString +=input;
-                                input = (char) dis.readByte();
-                            }
-                            long calLen = Long.parseLong(PILenString);
-                            int tskID = Integer.parseInt(TaskID);
-                            //convert string to long and send on to 
-                            PICalc piC = new PICalc( 
-                                 tskID,calLen
-                            );
-                            PICalc.PIRet rv =piC.numhits();
-                            // send back to socetHere
-                            /* return taskID numhits         */
-                            try{
-                                /*build output string*/
-                                String tskIDSt = Integer.toString(tskID);
-                                String res = RPI + " " +tskIDSt +" " + 
-                                Long.toString(rv.Hits) +EOC;
-                                dos.writeBytes(res);
-                            
-                            }
-                            catch(IOException exp){
-                                //add exception logging
-                            }
-                        
+                                System.out.print(input);
+                            } 
+                            System.out.println();
                         }
+                        
+                        if( input ==BUSY)
+                        {
+                            input = (char) dis.readByte();
+                            System.out.print("Busy Try again later");
+                            while(input !=CommTerm)
+                            {
+                                System.out.print(input);
+                            } 
+                            System.out.println();
+                        }
+                        if( input ==FAILED)
+                        {
+                            input = (char) dis.readByte();
+                            System.out.print("Job Failed try again later");
+                            while(input !=CommTerm)
+                            {
+                                System.out.print(input);
+                            } 
+                            System.out.println();
+                        }
+                        
                         
                         
 
@@ -105,15 +108,42 @@ public class SockManagement {
 
         String retval = "";
         try {
-
-            Socket client = new Socket("127.0.0.1", 1337);
-            outS = client.getOutputStream();
-            dos = new DataOutputStream(outS);
-
-            dos.writeChar('N');
-            dis = new DataInputStream(client.getInputStream());
-            readMessage.start();
-
+            if(!running)
+            {
+                client = new Socket(IP, PORT);
+                outS = client.getOutputStream();
+                dos = new DataOutputStream(outS);
+            }if(MS)
+            {
+                PrintWriter  pwMgmt = new PrintWriter(outS, false);
+                pwMgmt.print('M');
+                FileReader fr =  new FileReader(filename); 
+                int i;
+                while ((i=fr.read()) != -1)
+                {
+                    char iChar =(char)i;
+                    // if comma or number sendq
+                    System.out.println(iChar);
+                    pwMgmt.print(iChar);
+                    
+                }
+                pwMgmt.print(CommTerm);
+                pwMgmt.flush();
+            }
+            else
+            {
+                PrintWriter  pwMgmt = new PrintWriter(outS, false);
+                pwMgmt.print(PI+PiNum+CommTerm);
+                pwMgmt.flush();
+                
+                //dos.writeBytes(PI+PiNum+CommTerm);
+                //dos.flush();
+            }
+            if(!running){
+                running =true;
+                dis = new DataInputStream(client.getInputStream());
+                readMessage.start();
+            }
         } catch (IOException ex) {
             Logger.getLogger(SockManagement.class.getName()).log(Level.SEVERE, null, ex);
         }

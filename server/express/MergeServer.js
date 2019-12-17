@@ -96,6 +96,29 @@ var server = net.createServer(function(socket)
                     var ArrayText = datastring.substring(2,datastring.length-2);
                     console.log( ArrayText);
                     addMergeSortJob(ArrayText, socket );
+                }else if(
+                    datastring[0]== PI || 
+                    datastring[1]== PI ||
+                    datastring   == PI || 
+                    ds           == PI    )
+                {
+                    ConsoleSocket = socket;
+                    var PiCnt = datastring.substring(2,datastring.length-2);
+                    console.log( PiCnt);
+                    console.log( PiCnt);
+                    AddPiJob(PiCnt,socket);
+                }
+                else if(
+                    datastring[0]== PIRETCNT || 
+                    datastring[1]== PIRETCNT ||
+                    datastring   == PIRETCNT || 
+                    ds           == PIRETCNT    )
+                {
+                    var PiCnt = datastring.substring(2,datastring.length-2);
+                    // need to parse out task ID and hit cnt
+                    var parObj;
+                    parseInputSort(datastring, parOBj);
+                    savePITaskData( socket,  parOBj.TaskID, parOBj.SortedData );
                 }
             }
         }
@@ -104,15 +127,16 @@ var server = net.createServer(function(socket)
 
 function AddPiJob( PiCount, CmdConSocket)
 {
-    console.log("addMergeSortJob");    
+    console.log("addPISortJob");    
     const connection = mysql.createConnection(dbConn);
     var freeClients =freeClientCount();
+    console.log("apj1");
     if(freeClients<1)
     {
-        CmdConSocket.write("R Server busy try job later|");
+        CmdConSocket.write("B Server busy try job later|");
         return;
     }
-
+    console.log("apj1");
     var piJob =
     {
         jobID:0,
@@ -126,18 +150,19 @@ function AddPiJob( PiCount, CmdConSocket)
 
     }; // use PiJob.socks.pus
     
-
+    console.log("apj3");
     connection.connect((err) => 
     {
         if (err)
         {
             console.log("Failed to connect For Job Creation");
             CmdConSocket.write("E Failed to Add Job|");
-            CmdConSocket.destroy();
+            //CmdConSocket.destroy();
             return;
         }else
         {
-            connection.query('INSERT INTO DPProject.Jobs Set ?',
+            console.log("Qry");
+            connection.query('INSERT INTO DPPROJ.Jobs Set ?',
                 {JobType: 'P' ,PiCount:  PiCount } ,
                 (error, results, fields) => 
             {
@@ -154,48 +179,18 @@ function AddPiJob( PiCount, CmdConSocket)
                     var slicelen = PiCount/ (numclients);
                     var extra = PiCount%numclients;
                     var jobPiCount=0;
-                    for( i=0;i< numclients ;i++)
+                    console.log("NC = " +numclients);
+                    var ii=0
+                    for( ;ii< numclients ;++ii)
                     {
+                        console.log(ii);
                         jobPiCount = slicelen;
-                        if( i==(numclients-1) )
+                        if( ii==(numclients-1) )
                         {
                             jobPiCount += extra;
                         }
-                    
-                        connection.query('INSERT INTO DPProject.Tasks Set ?',{
-                            ClientID: 0 ,
-                            JobID:JobID,
-                            TaskData:  jobdataString },
-                            (error, results, fields) => 
-                            {
-                                if(error  && REQDB) 
-                                {
-                                    console.log("Failed to Insert into Job");
-                                    if(REQDB)
-                                    {
-                                        CmdConSocket.write("E Failed to Task to DB|");
-                                    }
-                                }else
-                                {
-                                    var TaskID="";
-                                    if(!error)
-                                    {
-                                        TaskID = results.insertId;
-                                    }
-                                    var sortmsg =piJob + TaskID.toString();
-                                    sortmsg +=CommSplit;
-                                    sortmsg +=jobPiCount.toString();
-                                    sortmsg += CommTerm;
-                                    piJob.socks.push(clientSockets[i]);
-                                    clientSockets[i].WORKING =true;
-                                    clientSockets[i].BUSY=true;
-                                    clientSockets[i].write(sortmsg);
-                                    clientSockets[i].TASKID = TaskID.toString();
-                                    piJob.TasksUsed++;    
-                                    piJob.TasksRunning++; 
-                                    clientSockets[i].pJob =piJob;
-                                }
-                            });
+                        AddTask(ii,jobPiCount,piJob,connection);
+                        
                     }
                 }
             });
@@ -210,7 +205,61 @@ function AddPiJob( PiCount, CmdConSocket)
 }
 
 
+function AddTask( cnt   ,jobPiCount,piJob ,connection )
+{
+    connection.query('INSERT INTO DPProject.Tasks Set ?',{
+        ClientID: 0 ,
+        JobID:piJob.JobID,
+        TaskData:  jobPiCount },
+        (error, results, fields) => 
+        {
+            if(error  && REQDB) 
+            {
+                console.log("Failed to Insert into Job");
+                if(REQDB)
+                {
+                    CmdConSocket.write("E Failed to Task to DB|");
+                }
+            }else
+            {
+                var TaskID="1122";
+                if(!error)
+                {
+                    TaskID = results.insertId;
+                }
+                 
+                var sortmsg =CPIJob + TaskID.toString();
+                sortmsg +=CommSplit;
+                sortmsg +=jobPiCount.toString();
+                sortmsg += CommTerm;
+                console.log("------------------------");
+                console.log(sortmsg);
+                console.log("------------------------");
+                piJob.socks.push(clientSockets[cnt]);
+                 
+                console.log(cnt);
+                 
+                clientSockets[cnt].WORKING =true;
+                clientSockets[cnt].BUSY=true;
+                clientSockets[cnt].write(sortmsg);
+                clientSockets[cnt].TASKID = TaskID.toString();
+                piJob.TasksUsed++;    
+                piJob.TasksRunning++; 
+                clientSockets[cnt].pJob =piJob;
+            }
+    }  );
 
+
+
+
+
+
+
+
+
+
+
+}
 
 
 
@@ -323,26 +372,29 @@ function AddNewClient( sNewClientSock)
         if (err)
         {
             console.log("Failed to connect");
-            socket.write("AE Failed to connect|");
-            socket.destroy();
+            sNewClientSock.write("AE Failed to connect|");
+            sNewClientSock.destroy();
         }else
         {
-            connection.query('INSERT INTO DPProject.Clients Set ?',
+            connection.query('INSERT INTO DPPROJ.Clients Set ?',
             {IPAddress: sNewClientSock.remoteAddress  } ,
             (error, results, fields) => 
             {
                 if(error) 
                 {
                     console.log("Failed to Insert");
-                    socket.write("AE Failed to ADDCLIENT|");
-                    socket.destroy();
+                    sNewClientSock.write("AE Failed to ADDCLIENT|");
+                    //sNewClientSock.destroy();
+                    return;
                 }
                 // send back client ID and end here
                 sNewClientSock.write("A"+ results.insertId.toString()+"|");
                 //sNewClientSock.write("M"+ results.insertId.toString()+"+23,5,72,12,8,1,45,33|");
                 
                 sNewClientSock.ClientID =results.insertId;  // add client to internal list
+                console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                 clientSockets.push(sNewClientSock);
+                console.log("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
             });
         }
     });
@@ -435,8 +487,9 @@ function savePITaskData( csock, TaskID, Hits )
     csock.pJob.TasksRunning--;
     csock.pJob.hits+=Hits;
     csock.BUSY=false;
+    csock.WORKING=false;
     // check for done
-    if( csock.pJob<=0)
+    if( csock.pJob.TasksRunning<=0)
     {
         ReturnPIJob(csock.pJob);
     }
@@ -451,7 +504,7 @@ function savePITaskData( csock, TaskID, Hits )
             if(REQDB)
             {
                 socket.write("AE Failed to connect|");
-                socket.destroy();
+                //socket.destroy();
                 return;
             }
         }
@@ -468,7 +521,7 @@ function savePITaskData( csock, TaskID, Hits )
                     if(REQDB)
                     {
                         socket.write("E FAILED TO UPDATE A TASK|");
-                        socket.destroy();
+                        //socket.destroy();
                         return;
                     }
                 }
@@ -509,7 +562,7 @@ function parseInputSort( inputData, parseout)
     parseout.TaskID =ID;
     parseout.SortedData =SortedData;
 }
-server.listen(9911, );
+server.listen(9977);
 //"192.168.1.17"
 function merge( arr1, arr2)
 {
@@ -527,6 +580,23 @@ function merge( arr1, arr2)
     }
   }
   return resultArray;}
+
+/**
+ * send pi merge data back tp managmement console
+ * @param {*} piCalcData 
+ */
+  function ReturnPIJob(piCalcData)
+  {
+    /* Need an estimate of PI here      */
+
+
+    var piEstimate = piCalcData.hits/hits.jobcount  * 4;
+    var retmsg = DonePi + piCalcData.jobID + CommSplit + piEstimate     +CommTerm;
+
+
+  }
+
+
 
 
 /**
@@ -711,7 +781,7 @@ function ReturnPiJob( PiInfo)
     var pi = numHits/szJob   * 4.00000;
 
 
-    ConsoleSocket.Write(DoneMerge);
+    ConsoleSocket.Write(DONE);
     ConsoleSocket.write(pi.toString());
     ConsoleSocket.write(CommTerm);
     const connection = mysql.createConnection(dbConn);
@@ -794,14 +864,17 @@ function ReturnPiJob( PiInfo)
 
 
 
-freeClientCount()
+function freeClientCount()
 {
     var freecount=0;
     clientSockets.forEach(function (arrayItem) {
-        if(arrayItem.BUSY)
+        if(arrayItem.BUSY==0)
         {
             freecount++;
         }
     });
     return freecount;
 }
+
+
+///function parseInputSort( inputData, parseout)
